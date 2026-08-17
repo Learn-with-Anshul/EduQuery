@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: '--max-old-space-size=1024'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Start server and smoke test
+        env:
+          PROXY_API_TOKEN: ${{ secrets.PROXY_API_TOKEN }}
+        run: |
+          set -e
+          echo "Starting server (node server.js) on port 3000 in background..."
+          PORT=3000 node server.js > server.log 2>&1 &
+          pid=$!
+          echo "Server PID: $pid"
+
+          # Wait up to 20s for server to be ready
+          n=0
+          until curl --fail http://localhost:3000/ -sS -o /dev/null || [ $n -ge 20 ]; do
+            n=$((n+1))
+            sleep 1
+          done
+
+          if ! curl --fail http://localhost:3000/ -sS -o /dev/null; then
+            echo "Server did not respond; dumping server.log" && cat server.log && kill $pid || true && exit 1
+          fi
+
+          echo "Server root responded successfully"
+
+          if [ -n "${PROXY_API_TOKEN}" ]; then
+            echo "Testing /api/llm-proxy with provided PROXY_API_TOKEN"
+            # Send a minimal test prompt — provider may reject depending on model/access
+            curl -sS -X POST http://localhost:3000/api/llm-proxy \
+              -H "Authorization: Bearer ${PROXY_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '{"prompt":"Hello from CI test","max_tokens":16}' -o proxy_resp.json || (echo "Proxy request failed"; cat server.log; kill $pid || true; exit 1)
+            echo "Proxy response (trimmed):"
+            head -c 200 proxy_resp.json || true
+            echo "\n"
+          else
+            echo "PROXY_API_TOKEN not provided; skipping proxy endpoint test"
+          fi
+
+          # Clean up server
+          kill $pid || true
+
+      - name: Verify build output
+        run: |
+          echo "Listing dist/ contents"
+          ls -la dist || true
+          if [ ! -f dist/index.html ]; then
+            echo "dist/index.html not found" && exit 1
+          fi
+
+      - name: Show package.json scripts
+        run: jq -r '.scripts' package.json || true

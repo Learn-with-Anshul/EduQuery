@@ -1,0 +1,33 @@
+{
+  "name": "eduquery",
+  "version": "1.0.0",
+  "description": "EduQuery — AI-powered student Q&A platform (static demo)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "bundle": "node tools/build.js",
+    "build": "npm run bundle",
+    "serve": "serve -s dist",
+    "lint": "echo \"No linter configured\""
+  },
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "helmet": "^6.0.1",
+    "compression": "^1.7.4",
+    "dotenv": "^16.3.1",
+    "morgan": "^1.10.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^6.7.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.18.0",
+    "nodemon": "^2.0.22",
+    "serve": "^14.0.1"
+  }
+}

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="EduQuery — AI-powered student Q&A platform. Ask questions, get instant AI answers, and join a community of learners across CSE, JEE, NEET, Data Science, and more." />
+  <meta name="keywords" content="student Q&A, AI answers, JEE, NEET, CSE, education, homework help" />
+  <title>EduQuery — AI-Powered Student Q&amp;A Platform</title>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="EduQuery — AI-Powered Student Q&A" />
+  <meta property="og:description" content="Ask academic questions and get instant AI-powered answers." />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="styles/main.css" />
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text y='.9em' font-size='70' x='12'>🎓</text></svg>" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     CANVAS (particle background)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <!-- Logo -->
+  <a class="nav-logo" href="#" onclick="window.showView && window.showView('landing'); return false;" aria-label="EduQuery Home">
+    <div class="nav-logo-icon" aria-hidden="true">🎓</div>
+    <span class="nav-logo-text">EduQuery</span>
+  </a>
+
+  <!-- Nav Links (visible when logged in) -->
+  <div id="nav-links" class="nav-links" role="list">
+    <button class="nav-link" data-view="dashboard" role="listitem" aria-label="Dashboard">
+      <span>🏠</span> Dashboard
+    </button>
+    <button class="nav-link" data-view="ask" role="listitem" aria-label="Ask a question">
+      <span>✏️</span> Ask
+    </button>
+    <button class="nav-link" data-view="leaderboard" role="listitem" aria-label="Leaderboard">
+      <span>🏆</span> Leaderboard
+    </button>
+    <button class="nav-link" data-view="profile" role="listitem" aria-label="My Profile">
+      <span>👤</span> Profile
+    </button>
+  </div>
+
+  <!-- Right side -->
+  <div class="nav-right">
+    <button id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle theme">☀️</button>
+
+    <!-- Auth buttons (logged out) -->
+    <div id="nav-auth" style="display:flex; gap:8px;">
+      <button class="btn btn-ghost btn-sm" id="btn-nav-login">Sign In</button>
+      <button class="btn btn-primary btn-sm" id="btn-nav-register">Get Started</button>
+    </div>
+
+    <!-- User pill (logged in) -->
+    <div id="nav-user" style="display:none; align-items:center; gap:8px;">
+      <button class="nav-avatar" id="nav-avatar-btn" aria-label="Open profile" onclick="window.showView && window.showView('profile')">DS</button>
+      <span class="nav-username" id="nav-username-display">Student</span>
+      <button class="btn btn-ghost btn-sm" id="btn-signout" aria-label="Sign out">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FLOATING ACTION BUTTON
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<button class="fab" onclick="window.askQuestion && window.askQuestion()" aria-label="Ask a new question" title="Ask a Question">
+  ✏️
+</button>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: LANDING
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<main id="view-landing" class="view active" role="main">
+
+  <!-- Hero Section -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-badge" aria-label="AI-powered platform">
+      <span>✨</span> AI-Powered Learning Platform
+    </div>
+
+    <h1 class="hero-title" id="hero-heading">
+      Get Answers to<br />
+      <span class="grad">Any Academic Question</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Ask questions across CSE, JEE, NEET, Data Science, Math and more. 
+      Get instant AI-powered answers and connect with a community of learners.
+    </p>
+
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-lg" id="btn-hero-start">
+        🚀 Start Learning Free
+      </button>
+      <button class="btn btn-secondary btn-lg" id="btn-hero-explore">
+        🔍 Explore Questions
+      </button>
+    </div>
+
+    <!-- Quick Ask Box -->
+    <div class="hero-ask-box" id="hero-ask-box">
+      <div class="hero-ask-inner">
+        <span class="hero-ask-icon">✨</span>
+        <input
+          type="text"
+          id="hero-ask-input"
+          class="hero-ask-input"
+          placeholder="Type your question here… e.g. How does recursion work?"
+          maxlength="200"
+          aria-label="Quick ask a question"
+        />
+        <select id="hero-ask-category" class="hero-ask-select" aria-label="Select subject">
+          <option value="cse">💻 CS Engineering</option>
+          <option value="jee">⚛️ JEE</option>
+          <option value="neet">🧬 NEET</option>
+          <option value="ds">📊 Data Science</option>
+          <option value="math">📐 Mathematics</option>
+          <option value="science">🔬 General Science</option>
+          <option value="history">📜 History &amp; Social</option>
+          <option value="english">📚 English</option>
+        </select>
+        <button class="btn btn-primary" id="btn-hero-ask" aria-label="Submit question">
+          Ask AI →
+        </button>
+      </div>
+      <p class="hero-ask-hint">Press Enter or click Ask AI • No sign-up required to explore</p>
+    </div>
+  </section>
+
+  <!-- Stats Row -->
+  <section class="stats-row" aria-label="Platform statistics">
+    <div class="stat-item">
+      <div class="stat-number" id="stat-questions">0</div>
+      <div class="stat-label">Questions Asked</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="stat-answered">0</div>
+      <div class="stat-label">AI Answers Given</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="stat-students">0</div>
+      <div class="stat-label">Students Learning</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="stat-subjects">0</div>
+      <div class="stat-label">Subject Categories</div>
+    </div>
+  </section>
+
+  <!-- Category Showcase -->
+  <section class="category-showcase" aria-labelledby="subjects-heading">
+    <p class="section-label">What You Can Learn</p>
+    <h2 class="section-title" id="subjects-heading">All Subjects, One Platform</h2>
+    <div class="cat-grid" id="category-showcase-grid">
+      <!-- Clicking a category goes straight to ask for that subject -->
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #6366f1, #8b5cf6)" onclick="window.quickAskCategory('cse')">
+        <div class="cat-showcase-icon">💻</div>
+        <div class="cat-showcase-name">Computer Science</div>
+        <div class="cat-showcase-desc">Algorithms, Data Structures, OS, Networks and more.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #f59e0b, #ef4444)" onclick="window.quickAskCategory('jee')">
+        <div class="cat-showcase-icon">⚛️</div>
+        <div class="cat-showcase-name">JEE Aspirants</div>
+        <div class="cat-showcase-desc">Physics, Chemistry & Math for IIT-JEE prep.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #10b981, #06b6d4)" onclick="window.quickAskCategory('neet')">
+        <div class="cat-showcase-icon">🧬</div>
+        <div class="cat-showcase-name">NEET Aspirants</div>
+        <div class="cat-showcase-desc">Biology and Chemistry for medical entrance.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #3b82f6, #6366f1)" onclick="window.quickAskCategory('ds')">
+        <div class="cat-showcase-icon">📊</div>
+        <div class="cat-showcase-name">Data Science & ML</div>
+        <div class="cat-showcase-desc">ML, Deep Learning, Statistics, Python and SQL.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #ec4899, #8b5cf6)" onclick="window.quickAskCategory('math')">
+        <div class="cat-showcase-icon">📐</div>
+        <div class="cat-showcase-name">Mathematics</div>
+        <div class="cat-showcase-desc">Algebra, Calculus, Geometry, and Number Theory.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #14b8a6, #3b82f6)" onclick="window.quickAskCategory('science')">
+        <div class="cat-showcase-icon">🔬</div>
+        <div class="cat-showcase-name">General Science</div>
+        <div class="cat-showcase-desc">Physics, Chemistry, Biology and Astronomy.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #d97706, #b45309)" onclick="window.quickAskCategory('history')">
+        <div class="cat-showcase-icon">📜</div>
+        <div class="cat-showcase-name">History & Social</div>
+        <div class="cat-showcase-desc">World History, Geography, Civics and Economics.</div>
+      </div>
+      <div class="cat-showcase-card fade-in-on-scroll" style="--cat-gradient: linear-gradient(135deg, #8b5cf6, #ec4899)" onclick="window.quickAskCategory('english')">
+        <div class="cat-showcase-icon">📚</div>
+        <div class="cat-showcase-name">English & Literature</div>
+        <div class="cat-showcase-desc">Grammar, Literature, Writing and Poetry.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Questions Preview -->
+  <section id="landing-feed-section" class="category-showcase" style="padding-bottom: 80px;" aria-labelledby="recent-questions-heading">
+    <p class="section-label">Community</p>
+    <h2 class="section-title" id="recent-questions-heading">Recent Questions</h2>
+    <div id="landing-feed" style="display:flex; flex-direction:column; gap:16px;">
+      <!-- Populated by JS -->
+    </div>
+    <div style="text-align:center; margin-top:32px;">
+      <button class="btn btn-secondary btn-lg" onclick="window.showView && window.showView('dashboard')">
+        See All Questions →
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: ONBOARDING (Category Selection)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-onboarding" class="view" role="main" aria-label="Subject category selection">
+  <div class="onboarding-wrapper">
+    <div class="onboarding-header">
+      <h1>What are you studying? 📚</h1>
+      <p>Choose your primary subject to personalise your experience.<br/>You can always change this later.</p>
+    </div>
+
+    <div class="onboarding-grid" id="onboarding-grid" role="list" aria-label="Subject categories">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="onboarding-footer">
+      <button class="btn btn-primary btn-lg" id="onboarding-confirm" disabled>
+        Continue →
+      </button>
+      <p style="color: var(--text-muted); font-size: 13px; margin-top: 12px;">
+        Select a category above to continue
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: DASHBOARD
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-dashboard" class="view" role="main" aria-label="Question feed dashboard">
+  <div class="dashboard-layout">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-greeting" id="dashboard-greeting">Welcome back! 👋</h1>
+        <div id="dashboard-category" class="q-cat-badge" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+      <div class="dashboard-actions">
+        <div class="search-box" role="search">
+          <span aria-hidden="true">🔍</span>
+          <input
+            type="search"
+            id="search-input"
+            placeholder="Search questions…"
+            aria-label="Search questions"
+            autocomplete="off"
+          />
+        </div>
+        <button class="btn btn-primary" onclick="window.askQuestion && window.askQuestion()" id="btn-ask-nav">
+          ✏️ Ask
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Feed -->
+    <div class="dashboard-main">
+
+      <!-- Ask Question Banner Card -->
+      <div class="ask-banner-card" id="ask-banner" role="complementary" aria-label="Ask a question">
+        <div class="ask-banner-left">
+          <div class="ask-banner-icon">✨</div>
+          <div>
+            <div class="ask-banner-title">Got a question?</div>
+            <div class="ask-banner-subtitle">Get an AI-powered answer in seconds</div>
+          </div>
+        </div>
+        <div class="ask-banner-input-row">
+          <input
+            type="text"
+            id="dashboard-quick-ask"
+            class="ask-banner-input"
+            placeholder="What do you want to learn today?"
+            maxlength="200"
+            aria-label="Quick ask input"
+          />
+          <button class="btn btn-primary" id="btn-dashboard-quick-ask">
+            🚀 Ask AI
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filters -->
+      <div class="category-filter-row" id="category-filters" role="group" aria-label="Filter by category">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Feed -->
+      <div id="question-feed" role="feed" aria-label="Question feed">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" aria-label="Sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-title">Browse Categories</div>
+        <div class="cat-stat-list" id="sidebar-cats">
+          <div class="cat-stat-item" onclick="window.showView && window.showView('dashboard')">
+            <span class="cat-stat-icon">💻</span>
+            <span class="cat-stat-name">Computer Science</span>
+          </div>
+          <div class="cat-stat-item" onclick="window.showView && window.showView('dashboard')">
+            <span class="cat-stat-icon">⚛️</span>
+            <span class="cat-stat-name">JEE Aspirants</span>
+          </div>
+          <div class="cat-stat-item" onclick="window.showView && window.showView('dashboard')">
+            <span class="cat-stat-icon">🧬</span>
+            <span class="cat-stat-name">NEET Aspirants</span>
+          </div>
+          <div class="cat-stat-item" onclick="window.showView && window.showView('dashboard')">
+            <span class="cat-stat-icon">📊</span>
+            <span class="cat-stat-name">Data Science & ML</span>
+          </div>
+          <div class="cat-stat-item" onclick="window.showView && window.showView('dashboard')">
+            <span class="cat-stat-icon">📐</span>
+            <span class="cat-stat-name">Mathematics</span>
+          </div>
+          <div class="cat-stat-item" onclick="window.showView && window.showView('dashboard')">
+            <span class="cat-stat-icon">🔬</span>
+            <span class="cat-stat-name">General Science</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">Quick Stats</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; color:var(--text-secondary);">Your Questions</span>
+            <span style="font-weight:700;" id="sidebar-my-questions">0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; color:var(--text-secondary);">Your Points</span>
+            <span style="font-weight:700; color:var(--accent-hover);" id="sidebar-my-points">0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; color:var(--text-secondary);">Bookmarks</span>
+            <span style="font-weight:700;">🔖 0</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: ASK QUESTION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-ask" class="view" role="main" aria-label="Ask a question">
+  <div class="ask-wrapper">
+    <div class="ask-header">
+      <h1>Ask a Question ✏️</h1>
+      <p>Be specific and provide context for the best AI-powered answer.</p>
+    </div>
+
+    <div class="ask-tips">
+      <h4>💡 Tips for a great question</h4>
+      <ul>
+        <li>Be specific — include what you've already tried</li>
+        <li>Give context — mention the chapter/topic</li>
+        <li>Use clear language — avoid vague phrasing</li>
+        <li>Add relevant tags to help others find your question</li>
+      </ul>
+    </div>
+
+    <form id="ask-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="ask-category">Subject Category</label>
+        <select class="form-select" id="ask-category" required aria-label="Select subject category">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="ask-title">
+          Question Title
+          <span>(min. 10 characters)</span>
+        </label>
+        <input
+          class="form-input"
+          id="ask-title"
+          type="text"
+          placeholder="e.g. How does quicksort work with duplicate elements?"
+          required
+          minlength="10"
+          maxlength="200"
+          aria-label="Question title"
+        />
+      </div>
+
+      <div class="form-group">
+        <div class="math-label-row">
+          <label class="form-label" for="ask-body">
+            Detailed Description
+            <span>(optional but recommended)</span>
+          </label>
+          <button type="button" class="math-preview-toggle" id="ask-preview-toggle">👁 Preview math</button>
+        </div>
+
+        <!-- Math Symbol Toolbar -->
+        <div class="math-toolbar-wrap" id="math-toolbar-wrap">
+          <div class="math-toolbar-tabs" role="tablist" aria-label="Math symbol categories">
+            <button class="math-tab-btn active" data-cat="greek" type="button">αβγ Greek</button>
+            <button class="math-tab-btn" data-cat="operators" type="button">± Operators</button>
+            <button class="math-tab-btn" data-cat="relations" type="button">= Relations</button>
+            <button class="math-tab-btn" data-cat="calculus" type="button">∫ Calculus</button>
+            <button class="math-tab-btn" data-cat="geometry" type="button">△ Geometry</button>
+            <button class="math-tab-btn" data-cat="sets" type="button">∈ Sets</button>
+            <button class="math-tab-btn" data-cat="fractions" type="button">½ Fractions</button>
+          </div>
+          <div class="math-toolbar" id="math-symbol-toolbar" role="toolbar" aria-label="Math symbols"></div>
+          <div class="math-hint">Click a symbol to insert at cursor. Use $ ... $ for inline math, $$ ... $$ for display math.</div>
+        </div>
+
+        <textarea
+          class="form-textarea"
+          id="ask-body"
+          placeholder="e.g. I need help solving $x^2 + 5x + 6 = 0$. I tried using the quadratic formula but got stuck at..."
+          maxlength="2000"
+          aria-label="Question details"
+        ></textarea>
+
+        <!-- Live math preview -->
+        <div class="math-preview-box" id="ask-math-preview" style="display:none;">
+          <em style="color:var(--text-muted); font-size:13px;">Start typing to see math preview…</em>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tags <span>(click to select)</span></label>
+        <p class="tag-suggestions-label">Suggested tags for this subject:</p>
+        <div class="tag-suggestions" id="tag-suggestions" role="group" aria-label="Tag suggestions">
+          <!-- Populated by JS -->
+        </div>
+        <input type="hidden" id="ask-tags-hidden" value="[]" />
+      </div>
+
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="window.showView && window.showView('dashboard')">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary btn-lg" id="btn-ask-submit">
+          🚀 Post & Get AI Answer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: QUESTION DETAIL
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-question" class="view" role="main" aria-label="Question detail">
+  <div class="qd-wrapper">
+
+    <button class="qd-back" onclick="window.showView && window.showView('dashboard')" aria-label="Back to dashboard">
+      ← Back
+    </button>
+
+    <div class="qd-header">
+      <div class="qd-meta">
+        <span class="q-cat-badge" id="qd-category" style="font-size:13px;"></span>
+        <span class="q-time" id="qd-time"></span>
+      </div>
+      <h1 class="qd-title-text" id="qd-title"></h1>
+      <div class="q-tags" id="qd-tags" style="margin-bottom:16px;"></div>
+      <p class="qd-body-text" id="qd-body"></p>
+    </div>
+
+    <!-- AI Answer Section -->
+    <div id="qd-answer-section">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Follow-up Suggestions -->
+    <div class="suggestions-section">
+      <div class="suggestions-title">💬 Related Questions</div>
+      <div id="qd-suggestions">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: PROFILE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-profile" class="view" role="main" aria-label="User profile">
+  <div class="profile-wrapper">
+
+    <div class="profile-header-card">
+      <div class="profile-avatar-lg" id="profile-avatar">DS</div>
+      <div class="profile-details">
+        <div class="profile-name" id="profile-name">Demo Student</div>
+        <div class="profile-email" id="profile-email">demo@eduquery.app</div>
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <div class="profile-stat-num" id="profile-points">0</div>
+            <div class="profile-stat-label">Points</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-num" id="profile-q-count">0</div>
+            <div class="profile-stat-label">Questions</div>
+          </div>
+        </div>
+        <div
+          class="profile-category-badge"
+          id="profile-category"
+          onclick="window.showView && window.showView('onboarding')"
+          title="Change category"
+          style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color:white;"
+        >
+          📚 Select Category
+        </div>
+      </div>
+      <div style="margin-left:auto; display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-secondary btn-sm" id="btn-change-category">Change Subject</button>
+        <button class="btn btn-danger btn-sm" id="btn-signout-profile" onclick="document.getElementById('btn-signout').click()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="profile-tabs" role="tablist" aria-label="Profile sections">
+      <button class="profile-tab-btn active" data-tab="questions" role="tab" aria-selected="true">My Questions</button>
+      <button class="profile-tab-btn" data-tab="bookmarks" role="tab" aria-selected="false">Bookmarked</button>
+    </div>
+
+    <div id="profile-tab-content" role="tabpanel" aria-label="Profile content">
+      <!-- Populated by JS -->
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEW: LEADERBOARD
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="view-leaderboard" class="view" role="main" aria-label="Community leaderboard">
+  <div class="lb-wrapper">
+    <div class="lb-header">
+      <h1>🏆 Leaderboard</h1>
+      <p>Top contributors across all subjects this week.</p>
+    </div>
+
+    <div id="leaderboard-list" role="list" aria-label="Leaderboard rankings">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AUTH MODAL
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="auth-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+  <div class="modal-box">
+    <button class="modal-close" id="auth-modal-close" aria-label="Close modal">✕</button>
+
+    <div class="modal-logo">
+      <div class="modal-logo-icon" aria-hidden="true">🎓</div>
+      <div class="modal-title" id="auth-modal-title">Join EduQuery</div>
+      <div class="modal-subtitle">Your AI-powered study companion</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs" role="tablist">
+      <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true">Sign In</button>
+      <button class="auth-tab" data-tab="register" role="tab" aria-selected="false">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="auth-login-form" role="tabpanel">
+      <button class="btn btn-google" type="button" aria-label="Continue with Google">
+        🔵 Continue with Google
+      </button>
+      <div class="auth-divider">or sign in with email</div>
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email</label>
+          <input class="form-input" id="login-email" type="email" placeholder="you@example.com" required autocomplete="email" aria-label="Email address" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" id="login-password" type="password" placeholder="••••••••" required autocomplete="current-password" aria-label="Password" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="btn-login-submit">Sign In</button>
+      </form>
+      <p style="text-align:center; font-size:13px; color:var(--text-muted); margin-top:14px;">
+        Don't have an account? 
+        <button style="background:none;border:none;color:var(--accent-hover);cursor:pointer;font-size:13px;font-weight:600;" onclick="document.querySelector('[data-tab=register]').click()">Register here</button>
+      </p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="auth-register-form" style="display:none;" role="tabpanel">
+      <button class="btn btn-google" type="button" aria-label="Continue with Google">
+        🔵 Continue with Google
+      </button>
+      <div class="auth-divider">or register with email</div>
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Full Name</label>
+          <input class="form-input" id="reg-name" type="text" placeholder="Arjun Sharma" required autocomplete="name" aria-label="Full name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email</label>
+          <input class="form-input" id="reg-email" type="email" placeholder="you@example.com" required autocomplete="email" aria-label="Email address" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Password <span>(min. 6 characters)</span></label>
+          <input class="form-input" id="reg-password" type="password" placeholder="••••••••" required minlength="6" autocomplete="new-password" aria-label="Password" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;" id="btn-register-submit">Create Account</button>
+      </form>
+      <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:14px;">
+        By registering you agree to our Terms & Privacy Policy
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     QUICK ASK MODAL (works from any page without full navigation)
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="quick-ask-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="qam-title">
+  <div class="modal-box" style="max-width: 560px;">
+    <button class="modal-close" id="qam-close" aria-label="Close quick ask">✕</button>
+
+    <div class="modal-logo">
+      <div class="modal-logo-icon" aria-hidden="true">✨</div>
+      <div class="modal-title" id="qam-title">Ask Your Question</div>
+      <div class="modal-subtitle">Get an instant AI-powered answer</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="qam-category">Subject</label>
+      <select class="form-select" id="qam-category" aria-label="Select subject">
+        <option value="cse">💻 Computer Science Engineering</option>
+        <option value="jee">⚛️ JEE Aspirants</option>
+        <option value="neet">🧬 NEET Aspirants</option>
+        <option value="ds">📊 Data Science &amp; ML</option>
+        <option value="math">📐 Mathematics</option>
+        <option value="science">🔬 General Science</option>
+        <option value="history">📜 History &amp; Social Studies</option>
+        <option value="english">📚 English &amp; Literature</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="qam-title-input">Your Question <span>(min 10 characters)</span></label>
+      <input
+        class="form-input"
+        id="qam-title-input"
+        type="text"
+        placeholder="e.g. What is the difference between stack and heap memory?"
+        maxlength="200"
+        aria-label="Question title"
+      />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="qam-body-input">More details <span>(optional)</span></label>
+      <textarea
+        class="form-textarea"
+        id="qam-body-input"
+        placeholder="Add context, what you've tried, or which chapter this is from…"
+        style="min-height: 90px;"
+        maxlength="1000"
+        aria-label="Question details"
+      ></textarea>
+    </div>
+
+    <div id="qam-ai-preview" class="qam-ai-preview" style="display:none;">
+      <div class="ai-header" style="padding: 12px 16px; border-radius: var(--radius-md) var(--radius-md) 0 0;">
+        <div class="ai-badge">🤖 AI Answer</div>
+        <span class="ai-model">Generating…</span>
+      </div>
+      <div class="qam-ai-content" id="qam-ai-content"></div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top: 4px;">
+      <button class="btn btn-secondary" id="qam-cancel" style="flex:1;">Cancel</button>
+      <button class="btn btn-primary" id="qam-submit" style="flex:2;">
+        🚀 Post &amp; Get AI Answer
+      </button>
+    </div>
+
+    <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:12px;">
+      🔐 Sign in to save your question and earn points
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TOAST CONTAINER
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="toast-container" role="status" aria-live="polite" aria-label="Notifications"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<script type="module" src="js/bundle.mjs"></script>
+
+<!-- Intersection Observer for fade-in animations -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll('.fade-in-on-scroll').forEach(el => observer.observe(el));
+
+    // Re-observe dynamically added elements
+    const mutObs = new MutationObserver(() => {
+      document.querySelectorAll('.fade-in-on-scroll:not(.visible)').forEach(el => observer.observe(el));
+    });
+    mutObs.observe(document.body, { childList: true, subtree: true });
+  });
+</script>
+
+</body>
+</html>

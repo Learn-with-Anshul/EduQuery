@@ -1,0 +1,42 @@
+name: Build (pre-deploy)
+
+# This workflow builds the project on pushes to main so GitHub shows a green build
+# status before Vercel (or another provider) picks up the commit. If you connect Vercel
+# via the GitHub integration, Vercel will automatically deploy pushes to the repository
+# and no token is required.
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "Listing dist/ contents"
+          ls -la dist || true
+          if [ ! -f dist/index.html ]; then
+            echo "dist/index.html not found" && exit 1
+          fi
+
+# Deployment note:
+# - To have Vercel automatically deploy on push, enable the Vercel ↔ GitHub integration
+#   in the Vercel dashboard (no GitHub Action token necessary).
+# - If you prefer to use the Vercel Action, restore the previous vercel-action step and
+#   add the VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID repository secrets.
